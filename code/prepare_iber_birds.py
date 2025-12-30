@@ -36,4 +36,4 @@ for split in ['train', 'val', 'test']:
             if os.path.exists(label_file):
                 bboxes = convert_yolo_to_voc(image_file, label_file, classes)
                 if bboxes:
-                    f.write(f'{image_file} {bboxes}\n')
+                    f.write(f'{os.path.abspath(image_file)} {bboxes}\n')
