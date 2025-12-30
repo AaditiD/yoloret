@@ -74,7 +74,7 @@ flags.DEFINE_string('test_dataset',
                     default='/usr/local/srv/tfrecords/test/*2007*.tfrecords',
                     help="Dataset glob for test")
 flags.DEFINE_string('anchors_path',
-                    default='model_data/yolo_anchors.txt',
+                    default='/content/yoloret/code/model_data/yolo_anchors.txt',
                     help="Anchors path")
 flags.DEFINE_string('classes_path',
                     default='model_data/voc_classes.txt',
