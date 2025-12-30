@@ -15,7 +15,7 @@ import numpy as np
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
-tf.keras.backend.set_learning_phase(1)
+# tf.keras.backend.set_learning_phase(1)
 
 def train(FLAGS):
     """Train yolov3 with different backbone
@@ -72,32 +72,26 @@ def train(FLAGS):
                                              log_dir=log_dir,
                                              write_images=True)
     checkpoint = tf.keras.callbacks.ModelCheckpoint(os.path.join(
-        log_dir, 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5'),
+        log_dir, 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.weights.h5'),
                                                     monitor='val_loss',
                                                     save_weights_only=True,
-                                                    save_best_only=True,
-                                                    period=3)
+                                                    save_best_only=True)
     checkpoint_quantize = tf.keras.callbacks.ModelCheckpoint(os.path.join(
-        log_dir, 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5'),
+        log_dir, 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.weights.h5'),
                                                     monitor='val_loss',
                                                     save_weights_only=True,
-                                                    save_best_only=True,
-                                                    period=1)
+                                                    save_best_only=True)
     checkpoint_replace = tf.keras.callbacks.ModelCheckpoint(os.path.join(
-        log_dir, 'best_scarfnet.h5'),
+        log_dir, 'best_scarfnet.weights.h5'),
                                                     monitor='val_loss',
                                                     save_weights_only=True,
-                                                    save_best_only=True,
-                                                    period=3)
+                                                    save_best_only=True)
     cos_lr = tf.keras.callbacks.LearningRateScheduler(
-        lambda epoch, _: tf.keras.experimental.CosineDecay(lr[1], epochs)(
-            epoch).numpy(),1)
+        lambda epoch, _: lr[1],1)
     cos_lr_freeze = tf.keras.callbacks.LearningRateScheduler(
-        lambda epoch, _: tf.keras.experimental.CosineDecay(lr[0], epochs)(
-            epoch).numpy(),1)
+        lambda epoch, _: lr[0],1)
     cos_lr_quantize = tf.keras.callbacks.LearningRateScheduler(
-        lambda epoch, _: tf.keras.experimental.CosineDecay(lr[1], 10)(
-            epoch).numpy(),1)
+        lambda epoch, _: lr[1],1)
     early_stopping = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss',
         min_delta=0,
@@ -168,7 +162,8 @@ def train(FLAGS):
         # exit()
         # model.load_weights('logs/mobilenetv2_2020-04-09/ep042-loss13.528-val_loss13.472.h5')
         # exit()
-        history_train, history_val = model.fit(epochs, [checkpoint, tensorboard, cos_lr_freeze], train_dataset, val_dataset)
+        with strategy.scope():
+            history_train, history_val = model.fit(epochs, [checkpoint, tensorboard, cos_lr_freeze], train_dataset, val_dataset)
 
         print(history_train)
         print(history_val)

@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-import neural_structured_learning as nsl
+# import neural_structured_learning as nsl
 import numpy as np
 from tqdm import tqdm
 
@@ -15,24 +15,24 @@ class AdvLossModel(tf.keras.Model):
         # loss = self.loss[0](y_trues, y_preds)
         return loss
 
+    @tf.function
     def _train_step(self, inputs):
         images, y_trues = inputs
         with tf.GradientTape() as tape_w:
-            tape_w.watch(self.trainable_variables)
             if self.use_adv:
                 with tf.GradientTape() as tape_x:
                     tape_x.watch(images)
                     y_preds = self(images, training=True)
                     loss = self._compute_total_loss(y_trues, y_preds)
-                    adv_loss = nsl.keras.adversarial_loss(
-                        images,
-                        y_trues,
-                        self,
-                        self._compute_total_loss,
-                        labeled_loss=loss,
-                        gradient_tape=tape_x,
-                        adv_config=self.adv_config)
-                    loss += self.adv_config.multiplier * adv_loss
+                    # adv_loss = nsl.keras.adversarial_loss(
+                    #     images,
+                    #     y_trues,
+                    #     self,
+                    #     self._compute_total_loss,
+                    #     labeled_loss=loss,
+                    #     gradient_tape=tape_x,
+                    #     adv_config=self.adv_config)
+                    # loss += self.adv_config.multiplier * adv_loss
             else:
                 y_preds = self(images, training=True)
                 loss = self._compute_total_loss(y_trues, y_preds)
@@ -45,6 +45,7 @@ class AdvLossModel(tf.keras.Model):
                 ema.apply(self.trainable_variables)
         return loss
 
+    @tf.function
     def _val_step(self, inputs):
         images, y_trues = inputs
         y_preds = self(images, training=False)
@@ -63,9 +64,9 @@ class AdvLossModel(tf.keras.Model):
                         "Training data",
                         tf.cast(batch[0] * 255, tf.uint8),
                         max_outputs=8)
-            per_replica_loss = self._distribution_strategy.run(
+            per_replica_loss = tf.distribute.get_strategy().run(
                 self._train_step if step else self._val_step, args=(batch,))
-            total_loss += self._distribution_strategy.reduce(
+            total_loss += tf.distribute.get_strategy().reduce(
                 tf.distribute.ReduceOp.SUM, per_replica_loss,
                 axis=None)
             num_batches += 1.0
@@ -87,14 +88,14 @@ class AdvLossModel(tf.keras.Model):
             writer=None,
             use_ema=False,
             use_adv=False,
-            adv_config=nsl.configs.make_adv_reg_config(
-                multiplier=0.2, adv_step_size=0.2, adv_grad_norm='infinity'),
+            # adv_config=nsl.configs.make_adv_reg_config(
+            #     multiplier=0.2, adv_step_size=0.2, adv_grad_norm='infinity'),
             start_epoch=0,
     ):
         self.writer = writer
         self.use_ema = use_ema
         self.use_adv = use_adv
-        self.adv_config = adv_config
+        # self.adv_config = adv_config
         self._configure_callbacks(callbacks)
         logs = {}
         train_losses = []

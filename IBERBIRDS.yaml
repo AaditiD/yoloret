@@ -1,0 +1,18 @@
+path: /kaggle/input/iber-birds/IBERBIRDS_dataset/IBERBIRDS 
+
+train: /kaggle/input/iber-birds/IBERBIRDS_dataset/IBERBIRDS/train/images
+val: /kaggle/input/iber-birds/IBERBIRDS_dataset/IBERBIRDS/val/images
+
+nc: 10
+
+names:
+  0: Ciconia_ciconia
+  1: Ciconia_nigra
+  2: Aegypius_monachus
+  3: Gyps_fulvus
+  4: Milvus_milvus
+  5: Milvus_migrans
+  6: Neophron_percnopterus
+  7: Falco_peregrinus
+  8: Aquila_chrysaetos
+  9: Aquila_adalberti

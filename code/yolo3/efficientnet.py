@@ -351,9 +351,10 @@ class DropConnect(tf.keras.layers.Layer):
             output = tf.math.divide(inputs, keep_prob) * binary_tensor
             return output
 
-        return tf.keras.backend.in_train_phase(drop_connect,
-                                               inputs,
-                                               training=training)
+        if training:
+            return drop_connect()
+        else:
+            return inputs
 
     def get_config(self):
         config = super().get_config()

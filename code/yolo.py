@@ -17,7 +17,7 @@ from typing import List, Tuple
 from functools import partial
 from tensorflow.python.compiler.tensorrt import trt_convert as trt
 
-tf.keras.backend.set_learning_phase(0)
+# tf.keras.backend.set_learning_phase(0)
 zoom_ratio = (224*224)/(416*416)
 
 # def compress_heatmap(inp, ref_image):

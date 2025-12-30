@@ -123,9 +123,13 @@ class Dataset(object):
     def _dataset_internal(self, files, dataset_builder, parser):
         dataset = tf.data.Dataset.from_tensor_slices(files)
         if self.mode == DATASET_MODE.TRAIN:
-            train_num = reduce(
-                lambda x, y: x + y,
-                map(lambda file: int(self._get_num_from_name(file)), files))
+            train_num = 0
+            for file in files:
+                if file.endswith('.txt'):
+                    with open(file, 'r') as f:
+                        train_num += len(f.readlines())
+                else:
+                    train_num += int(self._get_num_from_name(file))
             dataset = dataset.interleave(
                 lambda file: dataset_builder(file),
                 cycle_length=AUTOTUNE,
@@ -175,26 +179,31 @@ class Dataset(object):
         files = tf.io.gfile.glob(self.glob_path)
         if len(files) == 0:
             raise ValueError('No file found')
-        try:
-            num = reduce(lambda x, y: x + y,
-                         map(lambda file: self._get_num_from_name(file), files))
-        except Exception:
-            raise ValueError(
-                'Please format file name like <name>_<number>.<extension>')
-        else:
-            tfrecords = list(
-                filter(lambda file: file.endswith('.tfrecords'), files))
-            txts = list(filter(lambda file: file.endswith('.txt'), files))
-            if len(tfrecords) > 0:
-                tfrecords_dataset = self._dataset_internal(
-                    tfrecords, tf.data.TFRecordDataset, self.parse_tfrecord)
-            if len(txts) > 0:
-                txts_dataset = self._dataset_internal(txts,
-                                                      tf.data.TextLineDataset,
-                                                      self.parse_text)
-            if len(tfrecords) > 0 and len(txts) > 0:
-                return tfrecords_dataset.concatenate(txts_dataset), num
-            elif len(tfrecords) > 0:
-                return tfrecords_dataset, num
-            elif len(txts) > 0:
-                return txts_dataset, num
+        tfrecords = list(
+            filter(lambda file: file.endswith('.tfrecords'), files))
+        txts = list(filter(lambda file: file.endswith('.txt'), files))
+        num = 0
+        if len(tfrecords) > 0:
+            try:
+                num += reduce(lambda x, y: x + y,
+                             map(lambda file: self._get_num_from_name(file), tfrecords))
+            except Exception:
+                raise ValueError(
+                    'Please format file name like <name>_<number>.<extension>')
+        if len(txts) > 0:
+            for txt_file in txts:
+                with open(txt_file, 'r') as f:
+                    num += len(f.readlines())
+        if len(tfrecords) > 0:
+            tfrecords_dataset = self._dataset_internal(
+                tfrecords, tf.data.TFRecordDataset, self.parse_tfrecord)
+        if len(txts) > 0:
+            txts_dataset = self._dataset_internal(txts,
+                                                  tf.data.TextLineDataset,
+                                                  self.parse_text)
+        if len(tfrecords) > 0 and len(txts) > 0:
+            return tfrecords_dataset.concatenate(txts_dataset), num
+        elif len(tfrecords) > 0:
+            return tfrecords_dataset, num
+        elif len(txts) > 0:
+            return txts_dataset, num

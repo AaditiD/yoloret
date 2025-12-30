@@ -1,0 +1,10 @@
+Aegypius_monachus
+Aquila_adalberti
+Aquila_chrysaetos
+Ciconia_ciconia
+Ciconia_nigra
+Falco_peregrinus
+Gyps_fulvus
+Milvus_migrans
+Milvus_milvus
+Neophron_percnopterus
