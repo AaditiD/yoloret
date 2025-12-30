@@ -75,11 +75,17 @@ class Dataset(object):
                                       dtype=tf.float32)
         image.set_shape([None, None, 3])
         reshaped_data = tf.reshape(values[1:], [-1, 5])
-        xmins = tf.strings.to_number(reshaped_data[:, 0], tf.float32)
-        xmaxs = tf.strings.to_number(reshaped_data[:, 2], tf.float32)
-        ymins = tf.strings.to_number(reshaped_data[:, 1], tf.float32)
-        ymaxs = tf.strings.to_number(reshaped_data[:, 3], tf.float32)
-        labels = tf.strings.to_number(reshaped_data[:, 4], tf.int64)
+        # Pad to fixed max_boxes
+        max_boxes = 100
+        num_boxes = tf.shape(reshaped_data)[0]
+        padding = tf.maximum(0, max_boxes - num_boxes)
+        padded_data = tf.pad(reshaped_data, [[0, padding], [0, 0]], constant_values=0.0)
+        padded_data = padded_data[:max_boxes]  # Ensure exactly max_boxes
+        xmins = padded_data[:, 0]
+        xmaxs = padded_data[:, 2]
+        ymins = padded_data[:, 1]
+        ymaxs = padded_data[:, 3]
+        labels = tf.cast(padded_data[:, 4], tf.int64)
 
         image, bbox = get_random_data(image,
                                       xmins,
@@ -90,6 +96,7 @@ class Dataset(object):
                                       self.input_shape,
                                       zoom_in = self.zoom_in,
                                       train=self.mode == DATASET_MODE.TRAIN)
+        bbox.set_shape([100, 5])  # Fixed shape after padding
         if(self.num_scales==1):
             y1 = tf.py_function(
                 preprocess_true_boxes,
