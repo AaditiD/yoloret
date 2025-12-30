@@ -75,17 +75,25 @@ class Dataset(object):
                                       dtype=tf.float32)
         image.set_shape([None, None, 3])
         reshaped_data = tf.reshape(values[1:], [-1, 5])
+        # Convert to numbers first
+        xmins_raw = tf.strings.to_number(reshaped_data[:, 0], tf.float32)
+        ymins_raw = tf.strings.to_number(reshaped_data[:, 1], tf.float32)
+        xmaxs_raw = tf.strings.to_number(reshaped_data[:, 2], tf.float32)
+        ymaxs_raw = tf.strings.to_number(reshaped_data[:, 3], tf.float32)
+        labels_raw = tf.strings.to_number(reshaped_data[:, 4], tf.float32)
+        # Stack into tensor
+        bboxes_raw = tf.stack([xmins_raw, ymins_raw, xmaxs_raw, ymaxs_raw, labels_raw], axis=1)
         # Pad to fixed max_boxes
         max_boxes = 100
-        num_boxes = tf.shape(reshaped_data)[0]
+        num_boxes = tf.shape(bboxes_raw)[0]
         padding = tf.maximum(0, max_boxes - num_boxes)
-        padded_data = tf.pad(reshaped_data, [[0, padding], [0, 0]], constant_values=0.0)
-        padded_data = padded_data[:max_boxes]  # Ensure exactly max_boxes
-        xmins = padded_data[:, 0]
-        xmaxs = padded_data[:, 2]
-        ymins = padded_data[:, 1]
-        ymaxs = padded_data[:, 3]
-        labels = tf.cast(padded_data[:, 4], tf.int64)
+        padded_bboxes = tf.pad(bboxes_raw, [[0, padding], [0, 0]], constant_values=0.0)
+        padded_bboxes = padded_bboxes[:max_boxes]  # Ensure exactly max_boxes
+        xmins = padded_bboxes[:, 0]
+        ymins = padded_bboxes[:, 1]
+        xmaxs = padded_bboxes[:, 2]
+        ymaxs = padded_bboxes[:, 3]
+        labels = tf.cast(padded_bboxes[:, 4], tf.int64)
 
         image, bbox = get_random_data(image,
                                       xmins,
