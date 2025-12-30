@@ -27,7 +27,7 @@ def convert_yolo_to_voc(image_path, label_path, classes):
 classes = ['Aegypius_monachus', 'Aquila_adalberti', 'Aquila_chrysaetos', 'Ciconia_ciconia', 'Ciconia_nigra', 'Falco_peregrinus', 'Gyps_fulvus', 'Milvus_migrans', 'Milvus_milvus', 'Neophron_percnopterus']
 
 for split in ['train', 'val', 'test']:
-    with open(f'/workspaces/yoloret/code/data_paths/iber_birds_{split}.txt', 'w') as f:
+    with open(f'data_paths/iber_birds_{split}.txt', 'w') as f:
         image_dir = os.path.join(dataset_path, split, 'images')
         label_dir = os.path.join(dataset_path, split, 'labels')
         for image_file in glob.glob(os.path.join(image_dir, '*.png')):
